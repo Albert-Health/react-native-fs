@@ -114,19 +114,23 @@ public class RNFSManager extends ReactContextBaseJavaModule {
     }
     return stream;
   }
+  
+  private String getWriteAccessByAPILevel() {
+    return android.os.Build.VERSION.SDK_INT <= android.os.Build.VERSION_CODES.P ? "w" : "rwt";
+  }
 
   private OutputStream getOutputStream(String filepath, boolean append) throws IORejectionException {
-    Uri uri = getFileUri(filepath, false);
-    OutputStream stream;
-    try {
-      stream = reactContext.getContentResolver().openOutputStream(uri, append ? "wa" : "w");
-    } catch (FileNotFoundException ex) {
-      throw new IORejectionException("ENOENT", "ENOENT: " + ex.getMessage() + ", open '" + filepath + "'");
-    }
-    if (stream == null) {
-      throw new IORejectionException("ENOENT", "ENOENT: could not open an output stream for '" + filepath + "'");
-    }
-    return stream;
+     Uri uri = getFileUri(filepath, false);
+     OutputStream stream;
+     try {
+       stream = reactContext.getContentResolver().openOutputStream(uri, append ? "wa" : getWriteAccessByAPILevel());
+     } catch (FileNotFoundException ex) {
+       throw new IORejectionException("ENOENT", "ENOENT: " + ex.getMessage() + ", open '" + filepath + "'");
+     }
+     if (stream == null) {
+       throw new IORejectionException("ENOENT", "ENOENT: could not open an output stream for '" + filepath + "'");
+     }
+     return stream;
   }
 
   private static byte[] getInputStreamBytes(InputStream inputStream) throws IOException {
